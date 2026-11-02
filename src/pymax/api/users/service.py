@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, Literal
 from pymax.api.binding import bind_api_model
 from pymax.api.response import (
     parse_payload_list,
+    payload_item,
     require_payload_dict,
     require_payload_item_model,
 )
 from pymax.logging import get_logger
 from pymax.protocol import InboundFrame, Opcode
-from pymax.types.domain import ContactInfo, Session, User
+from pymax.types.domain import ContactInfo, ContactSync, Session, User
 
 from .enums import ContactAction, UserPayloadKey
 from .payloads import (
@@ -123,17 +124,20 @@ class UserService:
         self.app.users.pop(contact_id, None)
         return True
 
-    async def import_contacts(self, contacts: list[ContactInfo]) -> list[User]:
+    async def sync_contacts(self, contacts: list[ContactInfo]) -> ContactSync:
         frame = ImportContactsPayload.from_contacts(contacts)
 
         response = await self.app.invoke(Opcode.SYNC, frame.to_payload())
 
-        users = parse_payload_list(
-            response, UserPayloadKey.CONTACTS, User
-        )  # TODO: maybe also return phone mapping?
+        users = parse_payload_list(response, UserPayloadKey.CONTACTS, User)
+        phones = payload_item(response, UserPayloadKey.PHONES) or {}
+        return ContactSync(
+            contacts=[self._cache_user(user) for user in users],
+            phones=phones,
+        )
 
-        # {contacts: [...], phones: {data[0]: server_phone}}
-        return [self._cache_user(user) for user in users]
+    async def import_contacts(self, contacts: list[ContactInfo]) -> list[User]:
+        return (await self.sync_contacts(contacts)).contacts
 
     def get_chat_id(self, first_user_id: int, second_user_id: int) -> int:
         return first_user_id ^ second_user_id

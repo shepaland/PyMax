@@ -351,6 +351,70 @@ async def test_user_mixin_import_contacts_delegates_to_user_service() -> None:
 
 
 @pytest.mark.asyncio
+async def test_sync_contacts_keeps_server_phone_mapping_and_last_name() -> None:
+    from pymax.infra.user import UserMixin
+    from pymax.types import ContactInfo
+
+    class Client(UserMixin):
+        def __init__(self, app: FakeApp) -> None:
+            self.__app = app
+
+        @property
+        def _app(self) -> FakeApp:
+            return self.__app
+
+    app = FakeApp(
+        [
+            frame(
+                {
+                    "contacts": [user_payload(8), user_payload(9)],
+                    "phones": {"+7 999 000-00-08": 79990000008},
+                }
+            )
+        ]
+    )
+    client = Client(app)
+
+    result = await client.sync_contacts(
+        [
+            ContactInfo(
+                phone="+7 999 000-00-08",
+                first_name="Ada",
+                last_name="Lovelace",
+            )
+        ]
+    )
+
+    assert [contact.id for contact in result.contacts] == [8, 9]
+    assert result.phones == {"+7 999 000-00-08": 79990000008}
+    assert app.users[8] is result.contacts[0]
+    assert result.contacts[0]._actions is app.api.users
+    assert app.calls[0].opcode == Opcode.SYNC
+    assert app.calls[0].payload == {
+        "contactList": {
+            "+7 999 000-00-08": {
+                "firstName": "Ada",
+                "lastName": "Lovelace",
+            }
+        }
+    }
+
+
+@pytest.mark.asyncio
+async def test_sync_contacts_without_phones_returns_empty_mapping() -> None:
+    from pymax.types import ContactInfo
+
+    app = FakeApp([frame({"contacts": []})])
+
+    result = await app.api.users.sync_contacts(
+        [ContactInfo(phone="+79990000010", first_name="Nobody")]
+    )
+
+    assert result.contacts == []
+    assert result.phones == {}
+
+
+@pytest.mark.asyncio
 async def test_self_service_change_profile_and_close_all_sessions() -> None:
     app = FakeApp(
         [

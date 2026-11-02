@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pymax.types import ContactInfo, Session, User
+from pymax.types import ContactInfo, ContactSync, Session, User
 
 from .protocol import IClientProtocol
 
@@ -104,6 +104,18 @@ class UserMixin(IClientProtocol):
             Контакты Max, найденные или созданные сервером.
         """
         return await self._app.api.users.import_contacts(contacts)
+
+    async def sync_contacts(self, contacts: list[ContactInfo]) -> ContactSync:
+        """Синхронизирует контакты телефонной книги, как мобильное приложение.
+
+        Args:
+            contacts: Контакты с телефоном и именем.
+
+        Returns:
+            Найденные контакты Max и карта ``phones``: номер из запроса ->
+            номер, как его понял сервер. Контакты сохраняются в кеш клиента.
+        """
+        return await self._app.api.users.sync_contacts(contacts)
 
     def get_chat_id(self, first_user_id: int, second_user_id: int) -> int:
         """Вычисляет ID личного чата для пары пользователей.

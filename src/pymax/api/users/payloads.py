@@ -21,6 +21,7 @@ class ContactActionPayload(CamelModel):
 
 class _ContactPayload(CamelModel):
     first_name: str
+    last_name: str | None = None
 
 
 class ImportContactsPayload(CamelModel):
@@ -32,6 +33,7 @@ class ImportContactsPayload(CamelModel):
             contact_list={
                 contact.phone: _ContactPayload(
                     first_name=contact.first_name,
+                    last_name=contact.last_name,
                 )
                 for contact in contacts
             }

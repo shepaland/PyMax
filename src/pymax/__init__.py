@@ -34,10 +34,14 @@ from .types import (
     StoryPreview,
     TypingEvent,
     User,
+    ContactInfo,
+    ContactSync,
 )
 from .types.domain.sync import SyncOverrides, SyncState
 
 __all__ = (
+    "ContactInfo",
+    "ContactSync",
     "ApiError",
     "AuthFlow",
     "Chat",

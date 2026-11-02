@@ -19,6 +19,19 @@ class ContactInfo(CamelModel):  # TODO: move to another file
     last_name: str | None = None
 
 
+class ContactSync(CamelModel):
+    """Результат синхронизации телефонной книги (``sync_contacts``).
+
+    :ivar contacts: Аккаунты Max, которые сервер сопоставил с номерами.
+    :vartype contacts: list[User]
+    :ivar phones: Номер из запроса -> номер, как его понял сервер.
+    :vartype phones: dict[str, int]
+    """
+
+    contacts: list[User] = Field(default_factory=list)
+    phones: dict[str, int] = Field(default_factory=dict)
+
+
 class User(CamelModel):
     """Контакт или пользователь Max.
 

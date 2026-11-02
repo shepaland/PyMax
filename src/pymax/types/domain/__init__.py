@@ -34,4 +34,4 @@ from .story import (
     StoryVideoMedia,
 )
 from .sync import SyncOverrides, SyncState
-from .user import ContactInfo, User
+from .user import ContactInfo, ContactSync, User

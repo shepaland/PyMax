@@ -10,3 +10,4 @@ class UserPayloadKey(str, Enum):
     CONTACT = "contact"
     CONTACTS = "contacts"
     SESSIONS = "sessions"
+    PHONES = "phones"
